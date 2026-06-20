@@ -100,6 +100,37 @@ If nothing can be parsed, return {{"meds": []}}"""
         return []
 
 
+def run_health_insights(profile: dict, medications: list[dict], labs: list[dict]) -> dict:
+    """On-device health narrative: history summary + lab-trend interpretation."""
+    med_text = "\n".join(f"- {m.get('drug_name','')} {m.get('dosage','')} {m.get('frequency','')}" for m in medications) or "(none)"
+    lab_text = "\n".join(f"- {l.get('title','')}: {l.get('content','')}" for l in labs) or "(none on file)"
+    prof = (f"Blood group {profile.get('blood_type','?')}, "
+            f"{profile.get('diabetic','status unknown')}, "
+            f"known conditions: {profile.get('chronic_conditions') or 'none recorded'}.")
+
+    prompt = f"""You are a clinical summarization AI. Write a brief, factual health overview for THIS patient only.
+
+Profile: {prof}
+
+Current medications:
+{med_text}
+
+Lab reports on file:
+{lab_text}
+
+Respond with ONLY JSON — no markdown:
+{{"summary": "2-3 sentence plain-English overview of this patient's health picture",
+  "lab_trends": [{{"name": "test name", "reading": "value", "direction": "up|down|stable", "note": "what it suggests"}}]}}
+
+Only include lab_trends you can support from the lab text. If none, use an empty array."""
+
+    try:
+        result = _extract_json(_ask_ollama(prompt))
+        return {"summary": result.get("summary", ""), "lab_trends": result.get("lab_trends", [])}
+    except Exception:
+        return {"summary": "", "lab_trends": []}
+
+
 def run_fraud_scan(prescriptions: list[dict], health_records: list[dict]) -> dict:
     """Privacy-preserving fraud/anomaly scan over prescriptions AND health records.
     Returns {"summary": str, "flags": [...]}."""

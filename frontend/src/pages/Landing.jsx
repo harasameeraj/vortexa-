@@ -1,60 +1,89 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Brain, Lock, FileText, Activity } from 'lucide-react';
+import { Shield, Brain, Lock, Activity, Globe } from 'lucide-react';
+import { useT, LANGUAGES } from '../i18n';
 
 export default function Landing() {
   const nav = useNavigate();
+  const { t, lang, setLanguage } = useT();
+  const [langOpen, setLangOpen] = useState(false);
+
+  const current = LANGUAGES.find(l => l.code === lang);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
-      <header className="flex items-center justify-between px-8 py-5 border-b border-white/10">
+      <header className="flex items-center justify-between px-8 py-5 border-b border-gray-200 bg-white">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-blue-500 rounded-lg flex items-center justify-center">
-            <Shield size={20} />
+          <div className="w-9 h-9 bg-emerald-600 rounded-lg flex items-center justify-center">
+            <Shield size={20} className="text-white" />
           </div>
-          <span className="text-xl font-bold tracking-tight">VORTEXA</span>
+          <span className="text-xl font-semibold tracking-tight">HealthVault</span>
         </div>
-        <div className="flex gap-3">
-          <button onClick={() => nav('/login')} className="px-4 py-2 text-sm text-blue-300 border border-blue-400/30 rounded-lg hover:bg-blue-400/10 transition">
-            Sign In
+        <div className="flex items-center gap-3">
+          {/* Language switcher */}
+          <div className="relative">
+            <button
+              onClick={() => setLangOpen(v => !v)}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+            >
+              <Globe size={14} />
+              <span>{current?.flag} {current?.label}</span>
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 min-w-[140px]">
+                {LANGUAGES.map(l => (
+                  <button
+                    key={l.code}
+                    onClick={() => { setLanguage(l.code); setLangOpen(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-gray-50 ${lang === l.code ? 'text-emerald-600 font-medium' : 'text-gray-700'}`}
+                  >
+                    <span>{l.flag}</span> {l.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <button onClick={() => nav('/login')} className="px-4 py-2 text-sm text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-50 transition">
+            {t.signIn}
           </button>
-          <button onClick={() => nav('/register')} className="px-4 py-2 text-sm bg-blue-600 rounded-lg hover:bg-blue-500 transition">
-            Get Started
+          <button onClick={() => nav('/register')} className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
+            {t.getStarted}
           </button>
         </div>
       </header>
 
       {/* Hero */}
-      <main className="max-w-5xl mx-auto px-8 pt-20 pb-16 text-center">
-        <div className="inline-flex items-center gap-2 bg-blue-500/15 border border-blue-400/30 text-blue-300 text-xs font-medium px-3 py-1.5 rounded-full mb-6">
-          <Shield size={12} /> Patient-Sovereign · Signature-Verified · AI-Powered
-        </div>
-        <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6 text-white" style={{letterSpacing: '-1px'}}>
-          Your Health Data.<br />
-          <span className="text-blue-400">Your Signature.</span><br />
-          Your Control.
-        </h1>
-        <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10">
-          VORTEXA is a cryptographically-secured prescription intelligence network where patients own their medical data and every access requires your digital signature.
-        </p>
-        <div className="flex gap-4 justify-center flex-wrap">
-          <button onClick={() => nav('/login?role=patient')} className="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-semibold transition text-white">
-            Patient Portal →
-          </button>
-          <button onClick={() => nav('/login?role=provider')} className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-semibold transition border border-white/20">
-            Provider / Pharmacy Portal →
-          </button>
+      <main className="max-w-5xl mx-auto px-8 pt-16 pb-16 text-center">
+        {/* Prominent brand name */}
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <Shield size={32} className="text-white" />
+          </div>
+          <span className="text-5xl font-bold text-gray-900 tracking-tight">HealthVault</span>
         </div>
 
-        {/* Demo credentials */}
-        <div className="mt-8 inline-block bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left text-sm">
-          <p className="text-slate-400 font-medium mb-2">Demo Credentials (password: <code className="text-blue-300">demo123</code>)</p>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-slate-300">
-            <span>Patient: <span className="text-blue-300">alice@demo.com</span></span>
-            <span>Hospital: <span className="text-blue-300">hospital@demo.com</span></span>
-            <span>Patient: <span className="text-blue-300">bob@demo.com</span></span>
-            <span>Pharmacy: <span className="text-blue-300">pharmacy@demo.com</span></span>
-          </div>
+        <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium px-3 py-1.5 rounded-full mb-8">
+          <Shield size={12} /> {t.tagline}
+        </div>
+
+        <h1 className="text-4xl md:text-5xl font-semibold leading-tight mb-6 text-gray-900" style={{ letterSpacing: '-1px' }}>
+          {t.heroTitle1}<br />
+          <span className="text-emerald-600">{t.heroTitle2}</span><br />
+          {t.heroTitle3}
+        </h1>
+
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-10 text-center">
+          {t.heroDesc}
+        </p>
+
+        <div className="flex gap-4 justify-center flex-wrap">
+          <button onClick={() => nav('/login?role=patient')} className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition">
+            {t.patientPortal}
+          </button>
+          <button onClick={() => nav('/login?role=provider')} className="px-6 py-3 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl font-medium transition">
+            {t.providerPortal}
+          </button>
         </div>
       </main>
 
@@ -62,17 +91,17 @@ export default function Landing() {
       <section className="max-w-5xl mx-auto px-8 pb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { icon: Lock, title: 'RSA-Signed Consent', desc: 'Every access is authorized by your cryptographic signature. No signature = no access.' },
-            { icon: Shield, title: 'Encrypted Health Vault', desc: 'Your prescriptions, allergies, and lab reports are AES-GCM encrypted at rest.' },
-            { icon: Brain, title: 'AI Clinical Safety', desc: 'GPT-4o analyzes your medication profile for dangerous drug interactions and allergy conflicts.' },
-            { icon: Activity, title: 'Fraud Detection', desc: 'AI identifies suspicious prescription patterns, duplicate controlled substances, and anomalies.' },
+            { icon: Brain,    title: t.f1Title, desc: t.f1Desc },
+            { icon: Lock,     title: t.f2Title, desc: t.f2Desc },
+            { icon: Shield,   title: t.f3Title, desc: t.f3Desc },
+            { icon: Activity, title: t.f4Title, desc: t.f4Desc },
           ].map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/8 transition">
-              <div className="w-9 h-9 bg-blue-600/30 rounded-lg flex items-center justify-center mb-3">
-                <Icon size={18} className="text-blue-400" />
+            <div key={title} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition">
+              <div className="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center mb-3">
+                <Icon size={18} className="text-emerald-600" />
               </div>
-              <h3 className="font-semibold text-white mb-1.5 text-sm">{title}</h3>
-              <p className="text-slate-400 text-xs leading-relaxed">{desc}</p>
+              <h3 className="font-semibold text-gray-900 mb-1.5 text-sm">{title}</h3>
+              <p className="text-gray-500 text-xs leading-relaxed">{desc}</p>
             </div>
           ))}
         </div>

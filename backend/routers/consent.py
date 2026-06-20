@@ -82,6 +82,8 @@ def provider_status(provider_id: int, db: Session = Depends(get_db)):
     for t in tokens:
         if t.revoked:
             state = "revoked"
+        elif t.granted and t.is_emergency and (not t.expires_at or t.expires_at > datetime.utcnow()):
+            state = "emergency"
         elif t.granted and (not t.expires_at or t.expires_at > datetime.utcnow()):
             state = "granted"
         elif t.granted:
@@ -89,7 +91,7 @@ def provider_status(provider_id: int, db: Session = Depends(get_db)):
         else:
             state = "pending"
         # Prefer the strongest active state if multiple tokens exist
-        priority = {"granted": 3, "pending": 2, "expired": 1, "revoked": 0}
+        priority = {"emergency": 4, "granted": 3, "pending": 2, "expired": 1, "revoked": 0}
         if t.patient_id not in status or priority[state] > priority[status[t.patient_id]]:
             status[t.patient_id] = state
     return status
@@ -114,6 +116,29 @@ def get_pending(patient_id: int, db: Session = Depends(get_db)):
             "requested_at": t.created_at.isoformat(),
         })
     return result
+
+
+@router.get("/radar/{patient_id}")
+def consent_radar(patient_id: int, db: Session = Depends(get_db)):
+    """Active / expiring / risky access for the Consent Radar."""
+    now = datetime.utcnow()
+    grants = db.query(ConsentToken).filter(
+        ConsentToken.patient_id == patient_id, ConsentToken.granted == True, ConsentToken.revoked == False
+    ).all()
+    active, expiring, risky = [], [], []
+    for t in grants:
+        provider = db.query(Provider).filter(Provider.id == t.provider_id).first()
+        entry = {"token_id": t.id, "provider": provider.name if provider else "Unknown",
+                 "provider_type": provider.provider_type if provider else "",
+                 "scope": t.access_scope, "expires_at": t.expires_at.isoformat() if t.expires_at else None}
+        if t.expires_at and t.expires_at < now:
+            risky.append(entry)
+        elif t.expires_at and (t.expires_at - now) <= timedelta(hours=6):
+            entry["in_minutes"] = max(int((t.expires_at - now).total_seconds() // 60), 0)
+            expiring.append(entry)
+        else:
+            active.append(entry)
+    return {"active": active, "expiring": expiring, "risky": risky}
 
 
 @router.get("/granted/{patient_id}")

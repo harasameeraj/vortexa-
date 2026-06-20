@@ -90,6 +90,12 @@ def _run_clinical_check(patient_id: int):
         db.rollback()
     finally:
         db.close()
+    # Refresh the Guardian report so the Health Integrity Score reflects the new meds
+    try:
+        from .guardian import _build_and_store
+        _build_and_store(patient_id)
+    except Exception:
+        pass
 
 
 @router.post("/add/{patient_id}")

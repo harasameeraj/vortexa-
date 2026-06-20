@@ -59,3 +59,7 @@ class ConsentSign(BaseModel):
 
 class ConsentRevoke(BaseModel):
     token_id: int
+
+
+class EmergencyAccessRequest(BaseModel):
+    reason: str

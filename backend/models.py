@@ -89,6 +89,8 @@ class ConsentToken(Base):
     access_scope = Column(String, default="prescriptions")
     granted = Column(Boolean, default=False)
     revoked = Column(Boolean, default=False)
+    is_emergency = Column(Boolean, default=False)
+    emergency_reason = Column(Text, nullable=True)
     expires_at = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -106,6 +108,17 @@ class AccessLog(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     patient = relationship("Patient", back_populates="access_logs")
+
+
+class GuardianReport(Base):
+    __tablename__ = "guardian_reports"
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    integrity_score = Column(Integer, default=0)
+    status = Column(String)            # green / yellow / red
+    status_label = Column(String)
+    sections_json = Column(Text)       # full report payload (5 lenses + breakdown)
+    generated_at = Column(DateTime, default=datetime.utcnow)
 
 
 class AIAlert(Base):

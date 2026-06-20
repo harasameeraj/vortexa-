@@ -6,7 +6,7 @@ load_dotenv()
 
 from .database import engine, Base
 from . import models  # noqa: ensure models are registered
-from .routers import auth, vault, prescriptions, consent, ai, audit, patients, providers
+from .routers import auth, vault, prescriptions, consent, ai, audit, patients, providers, guardian, emergency
 
 Base.metadata.create_all(bind=engine)
 
@@ -14,7 +14,7 @@ app = FastAPI(title="VORTEXA", description="Patient-Sovereign Prescription Intel
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origin_regex=r"http://localhost:\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,6 +28,8 @@ app.include_router(ai.router)
 app.include_router(audit.router)
 app.include_router(patients.router)
 app.include_router(providers.router)
+app.include_router(guardian.router)
+app.include_router(emergency.router)
 
 
 @app.get("/")
