@@ -2,8 +2,8 @@ import json
 import re
 import requests
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "qwen3"
+OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
+MODEL = "qwen3-cpu"
 
 
 def _ask_ollama(prompt: str) -> str:
@@ -17,7 +17,7 @@ def _ask_ollama(prompt: str) -> str:
             "think": False,
             "options": {"temperature": 0.1},
         },
-        timeout=300,
+        timeout=15,
     )
     response.raise_for_status()
     return response.json()["response"]

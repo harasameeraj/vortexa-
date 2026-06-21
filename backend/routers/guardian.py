@@ -34,7 +34,8 @@ def _build_and_store(patient_id: int):
 def run_guardian(patient_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     if not db.query(Patient).filter(Patient.id == patient_id).first():
         raise HTTPException(404, "Patient not found")
-    background_tasks.add_task(_build_and_store, patient_id)
+    from .prescriptions import _run_clinical_check
+    background_tasks.add_task(_run_clinical_check, patient_id)
     return {"status": "running"}
 
 

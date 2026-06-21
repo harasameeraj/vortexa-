@@ -48,8 +48,6 @@ def _parse_pdf_meds(rx_id: int):
         patient_id = rx.patient_id
     finally:
         db.close()
-    # Refresh clinical safety now that new meds are known
-    _run_clinical_check(patient_id)
 
 
 def _run_clinical_check(patient_id: int):
@@ -119,10 +117,7 @@ def add_prescription(patient_id: int, body: PrescriptionCreate, background_tasks
     db.commit()
     db.refresh(rx)
 
-    # Run the AI clinical safety check asynchronously so this request returns immediately
-    background_tasks.add_task(_run_clinical_check, patient_id)
-
-    return {"id": rx.id, "drug_name": rx.drug_name, "message": "Prescription added — AI safety check running in background"}
+    return {"id": rx.id, "drug_name": rx.drug_name, "message": "Prescription added"}
 
 
 @router.post("/upload-pdf/{patient_id}")

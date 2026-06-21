@@ -17,6 +17,7 @@ export default function ProviderPortal() {
   const [records, setRecords] = useState(null);
   const [viewingPatientId, setViewingPatientId] = useState(null);
   const [consentStatus, setConsentStatus] = useState({});
+  const [authorizedPatients, setAuthorizedPatients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [filePreview, setFilePreview] = useState(null);
@@ -25,18 +26,31 @@ export default function ProviderPortal() {
   const [emergencyReason, setEmergencyReason] = useState('');
   const [emergencyLoading, setEmergencyLoading] = useState(false);
 
-  useEffect(() => {
-    const u = JSON.parse(localStorage.getItem('user') || '{}');
-    if (!u.id || u.role !== 'provider' || String(u.id) !== String(id)) {
-      localStorage.clear();
-      nav('/login?role=provider');
+  const loadAuthorizedPatients = useCallback(async () => {
+    try {
+      const res = await api.get(`/consent/authorized-patients/${id}`);
+      setAuthorizedPatients(res.data);
+    } catch (err) {
+      console.error('Error fetching authorized patients:', err);
     }
-  }, [id, nav]);
+  }, [id]);
 
   const refreshStatus = useCallback(async () => {
     const sRes = await api.get(`/consent/provider-status/${id}`);
     setConsentStatus(sRes.data);
-  }, [id]);
+    loadAuthorizedPatients();
+  }, [id, loadAuthorizedPatients]);
+
+  useEffect(() => {
+    if (!id) return;
+    const u = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!u.id || u.role !== 'provider' || String(u.id) !== String(id)) {
+      localStorage.clear();
+      nav('/login?role=provider');
+    } else {
+      refreshStatus();
+    }
+  }, [id, nav, refreshStatus]);
 
   async function searchPatient(e) {
     e?.preventDefault();
@@ -191,6 +205,36 @@ export default function ProviderPortal() {
                   </div>
                 );
               })()}
+
+              {/* Patients with Active Consent */}
+              <div className="mt-6 pt-5 border-t border-gray-100">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                  Patients with Active Consent
+                </h3>
+                {authorizedPatients.length === 0 ? (
+                  <p className="text-gray-400 text-xs italic">No patients have currently granted active consent.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {authorizedPatients.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between bg-emerald-50/50 border border-emerald-100 rounded-lg p-3">
+                        <div className="min-w-0">
+                          <p className="text-gray-900 text-sm font-medium truncate">{p.name}</p>
+                          <p className="text-gray-400 text-xs font-mono truncate">{p.patient_code} · {p.email}</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setFound(p);
+                            viewRecords(p.id);
+                          }}
+                          className="flex items-center gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded font-medium transition shrink-0"
+                        >
+                          <FileText size={12} /> View Records
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Authorized records */}

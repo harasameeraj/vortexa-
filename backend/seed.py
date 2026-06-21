@@ -45,17 +45,17 @@ def seed():
 
     # Patients (name, email, blood_type, dob, contact, diabetic, chronic_conditions)
     patients_data = [
-        ("Alice Johnson", "alice@demo.com", "A+", "1990-03-15", "+1-555-0101", "diabetic", "Type 2 diabetes, hypertension"),
-        ("Bob Smith", "bob@demo.com", "O-", "1978-07-22", "+1-555-0102", "non-diabetic", "High cholesterol"),
-        ("Carol White", "carol@demo.com", "B+", "1985-11-08", "+1-555-0103", "non-diabetic", "Hypothyroidism, anxiety"),
+        ("Alice Johnson", "alice@demo.com", "A+", "1990-03-15", "+1-555-0101", "diabetic", "Type 2 diabetes, hypertension", "VTX-AABC4D8A"),
+        ("Bob Smith", "bob@demo.com", "O-", "1978-07-22", "+1-555-0102", "non-diabetic", "High cholesterol", "VTX-333E72D3"),
+        ("Carol White", "carol@demo.com", "B+", "1985-11-08", "+1-555-0103", "non-diabetic", "Hypothyroidism, anxiety", "VTX-0C239F54"),
     ]
 
     saved_keys = {}
     patient_objs = []
-    for name, email, blood_type, dob, contact, diabetic, chronic in patients_data:
+    for name, email, blood_type, dob, contact, diabetic, chronic, pcode in patients_data:
         priv, pub = generate_rsa_keypair()
         p = models.Patient(
-            patient_code=generate_patient_code(),
+            patient_code=pcode,
             name=name, email=email,
             password_hash=pwd.hash("demo123"),
             public_key_pem=pub,

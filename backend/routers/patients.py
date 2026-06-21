@@ -10,13 +10,17 @@ router = APIRouter(prefix="/patients", tags=["patients"])
 
 @router.get("/search")
 def search_patient(code: str, db: Session = Depends(get_db)):
-    """Providers locate a patient ONLY by their exact unique code — no directory listing."""
-    code = (code or "").strip().upper()
-    if not code:
-        raise HTTPException(400, "Patient code required")
-    p = db.query(Patient).filter(Patient.patient_code == code).first()
+    """Providers locate a patient by their unique code, email, or name."""
+    term = (code or "").strip()
+    if not term:
+        raise HTTPException(400, "Search query required")
+    p = db.query(Patient).filter(
+        (Patient.patient_code.ilike(term)) |
+        (Patient.email.ilike(term)) |
+        (Patient.name.ilike(term))
+    ).first()
     if not p:
-        raise HTTPException(404, "No patient found with that ID")
+        raise HTTPException(404, "No patient found with that code, email, or name")
     # Minimal identity info only — no medical data until consent is granted
     return {"id": p.id, "name": p.name, "patient_code": p.patient_code}
 

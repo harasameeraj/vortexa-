@@ -43,6 +43,7 @@ export default function PatientDashboard() {
 
   // Identity guard — a patient may only view their OWN vault (core sovereignty rule)
   useEffect(() => {
+    if (!id) return;
     const u = JSON.parse(localStorage.getItem('user') || '{}');
     if (!u.id || u.role !== 'patient' || String(u.id) !== String(id)) {
       localStorage.clear();

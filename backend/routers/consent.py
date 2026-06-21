@@ -262,3 +262,32 @@ def get_authorized_file(provider_id: int, patient_id: int, record_id: int, db: S
         media_type=record.mime_type or "application/pdf",
         headers={"Content-Disposition": f'inline; filename="{record.file_name}"'},
     )
+
+
+@router.get("/authorized-patients/{provider_id}")
+def get_authorized_patients(provider_id: int, db: Session = Depends(get_db)):
+    """Returns a list of patients who have granted active or emergency consent to this provider."""
+    now = datetime.utcnow()
+    tokens = db.query(ConsentToken).filter(
+        ConsentToken.provider_id == provider_id,
+        ConsentToken.granted == True,
+        ConsentToken.revoked == False,
+    ).all()
+    
+    patients_map = {}
+    for t in tokens:
+        if t.expires_at and t.expires_at < now:
+            continue
+        p = db.query(Patient).filter(Patient.id == t.patient_id).first()
+        if p and p.id not in patients_map:
+            patients_map[p.id] = {
+                "id": p.id,
+                "name": p.name,
+                "patient_code": p.patient_code,
+                "email": p.email,
+                "status": "emergency" if t.is_emergency else "granted",
+                "expires_at": t.expires_at.isoformat() if t.expires_at else None
+            }
+            
+    return list(patients_map.values())
+
